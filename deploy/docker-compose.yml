@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-finance_track}
+      POSTGRES_USER: ${POSTGRES_USER:-finance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finance_password_change_me}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      APP_PORT: 3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://www.finance-track.ru,https://finance-track.ru}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
+
+      HOST: db
+      PORT: 5432
+      NAMEUSER: ${POSTGRES_USER:-finance}
+      PASSWORD: ${POSTGRES_PASSWORD:-finance_password_change_me}
+      DATABASE: ${POSTGRES_DB:-finance_track}
+
+      TYPEORM_SYNC: ${TYPEORM_SYNC:-true}
+      TYPEORM_LOGGING: ${TYPEORM_LOGGING:-false}
+
+      SEED_ON_STARTUP: ${SEED_ON_STARTUP:-true}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@finance-track.ru}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD in deploy/.env}
+      SEED_ADMIN_PHONE: ${SEED_ADMIN_PHONE:-+79990000000}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Admin}
+      SEED_ADMIN_SURNAME: ${SEED_ADMIN_SURNAME:-Finance}
+    expose:
+      - "3000"
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    # For HTTPS later:
+    # volumes:
+    #   - ./letsencrypt:/etc/letsencrypt:ro
+
+volumes:
+  pgdata:
+

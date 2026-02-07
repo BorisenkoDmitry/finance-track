@@ -1,0 +1,292 @@
+/* react-datepicker overrides (scoped) */
+/* Loaded AFTER tailwind.css to guarantee it wins over library defaults. */
+
+.period-picker .react-datepicker,
+.period-picker .react-datepicker * {
+  font-family: "Montserrat", "Arial", sans-serif;
+  box-sizing: border-box;
+}
+
+.period-picker .react-datepicker__triangle {
+  display: none !important;
+}
+
+/* RANGE: force 3 months in a single row + reserve space for side arrows */
+.period-picker--range {
+  max-height: max-content;
+  height: 90vh !important;
+  overflow: auto;
+}
+
+/* SINGLE: same overall container behavior as range */
+.period-picker--single {
+  max-height: max-content;
+  height: 90vh !important;
+  overflow: auto;
+}
+.period-picker--range .react-datepicker {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  padding: 12px 40px 14px;
+  align-items: flex-start;
+  border: none;
+  background-color: transparent;
+}
+
+.period-picker--range .react-datepicker__month-container {
+  float: none !important;
+  flex: 1 1 0 !important;
+  width: 0 !important; /* allow flex to shrink evenly */
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+/* Multi-month layout */
+.period-picker .react-datepicker__month-container {
+  margin: 8px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(50, 46, 104, 0.45) !important;
+  background: rgba(11, 10, 34, 0.35) !important; /* primary-800 */
+  overflow: hidden;
+}
+
+.period-picker .react-datepicker__month {
+  margin: 0 !important;
+  padding: 10px 12px 12px !important;
+}
+
+/* Header */
+.period-picker .react-datepicker__header {
+  background: rgba(8, 7, 20, 0.35) !important;
+  border-bottom: 1px solid rgba(50, 46, 104, 0.5) !important;
+  padding: 10px 12px 12px !important;
+}
+
+.period-picker .react-datepicker__current-month {
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(50, 46, 104, 0.55) !important;
+  background: rgba(11, 10, 34, 0.55) !important;
+  color: rgba(245, 246, 255, 0.92) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
+}
+
+/* Day names */
+.period-picker .react-datepicker__day-names {
+  margin-top: 10px !important;
+  padding-top: 10px !important;
+  border-top: 1px solid rgba(50, 46, 104, 0.35) !important;
+}
+
+.period-picker .react-datepicker__day-name {
+  color: rgba(189, 189, 189, 0.78) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  width: 2.2rem !important;
+  line-height: 2.2rem !important;
+}
+
+/* Day cells */
+.period-picker .react-datepicker__day {
+  width: 2.2rem !important;
+  line-height: 2.2rem !important;
+  margin: 0.16rem !important;
+  border-radius: 10px !important;
+  color: rgba(233, 233, 233, 0.92) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 120ms ease;
+}
+
+.period-picker .react-datepicker__day:hover {
+  background: rgba(99, 89, 233, 0.18) !important; /* primary-500 */
+  border-color: rgba(99, 89, 233, 0.28) !important;
+  color: rgba(245, 246, 255, 0.98) !important;
+  transform: translateY(-1px);
+}
+
+.period-picker .react-datepicker__day--outside-month {
+  color: rgba(189, 189, 189, 0.35) !important;
+}
+
+.period-picker .react-datepicker__day--disabled {
+  color: rgba(189, 189, 189, 0.22) !important;
+  cursor: not-allowed !important;
+}
+
+/* Selection / range */
+.period-picker .react-datepicker__day--in-range,
+.period-picker .react-datepicker__day--in-selecting-range {
+  background: rgba(99, 89, 233, 0.16) !important;
+  border-color: rgba(99, 89, 233, 0.18) !important;
+  color: rgba(245, 246, 255, 0.98) !important;
+}
+
+.period-picker .react-datepicker__day--range-start,
+.period-picker .react-datepicker__day--range-end {
+  background: rgba(99, 89, 233, 0.78) !important;
+  border-color: rgba(43, 210, 190, 0.45) !important; /* secondary accent */
+  color: rgba(245, 246, 255, 0.98) !important;
+  font-weight: 800 !important;
+}
+
+.period-picker .react-datepicker__day--keyboard-selected {
+  background: rgba(99, 89, 233, 0.28) !important;
+  color: rgba(245, 246, 255, 0.98) !important;
+}
+
+/* Navigation */
+.period-picker .react-datepicker__navigation {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  background: rgba(11, 10, 34, 0.7) !important;
+  border: 1px solid rgba(50, 46, 104, 0.55) !important;
+  box-shadow: 0 12px 30px -22px rgba(0, 0, 0, 0.9) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 5 !important;
+}
+
+.period-picker .react-datepicker__navigation-icon::before {
+  border-color: rgba(189, 189, 189, 0.75) !important;
+  border-width: 2px 2px 0 0 !important;
+  left: auto !important;
+  right: -4px !important;
+  top: 8px !important;
+
+}
+
+.period-picker .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: rgba(245, 246, 255, 0.95) !important;
+}
+
+.period-picker .react-datepicker__navigation:hover {
+  background: rgba(11, 10, 34, 0.9) !important;
+  border-color: rgba(99, 89, 233, 0.45) !important;
+}
+
+.period-picker--range .react-datepicker__navigation {
+  top: 36px !important; /* align with month header row */
+  transform: translateY(-50%) !important;
+}
+
+.period-picker--range .react-datepicker__navigation--previous {
+  left: 0px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.period-picker--range .react-datepicker__navigation--next {
+  right: 0px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* SINGLE: one calendar (optionally with time) with side arrows like range */
+.period-picker--single .react-datepicker {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 14px !important;
+  padding: 12px 40px 14px !important;
+  border: none !important;
+  background-color: transparent !important;
+  align-items: flex-start !important;
+  justify-content: center;
+}
+
+.period-picker--single .react-datepicker__month-container {
+  margin: 0 !important;
+  max-width: 400px !important;
+  width: 100%;
+}
+
+.period-picker--single .react-datepicker__time-container {
+  margin: 0 !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  max-width: 130px;
+  width: 100%;
+}
+
+.period-picker--single .react-datepicker__day.react-datepicker__day--selected {
+  background-color: var(--scrollbar-thumb-hover) !important;
+}
+
+.period-picker--single .react-datepicker__navigation {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+.period-picker--single .react-datepicker__navigation--previous {
+  left: 0px !important;
+}
+
+.period-picker--single .react-datepicker__navigation--next {
+  right: 0px !important;
+}
+
+.period-picker--range .react-datepicker__time-list {
+  padding: 0 !important;
+}
+
+.period-picker--single .react-datepicker__time-list {
+  padding: 0 !important;
+}
+
+/* Fine-tune arrow placement inside the circle for prev/next */
+.period-picker .react-datepicker__navigation--previous .react-datepicker__navigation-icon::before {
+  left: -4px !important;
+  right: auto !important;
+  transform: rotate(-135deg) !important;
+}
+
+.period-picker .react-datepicker__navigation--next .react-datepicker__navigation-icon::before {
+  left: -4px !important;
+  right: auto !important;
+  transform: rotate(45deg) !important;
+}
+
+/* Time panel (DateField isTimeOn) */
+.period-picker .react-datepicker__time-container {
+  border-left: 1px solid rgba(50, 46, 104, 0.45) !important;
+  background: rgba(8, 7, 20, 0.35) !important;
+}
+
+.period-picker .react-datepicker__time {
+  background: transparent !important;
+}
+
+.period-picker .react-datepicker__time-box {
+  width: 110px !important;
+}
+
+.period-picker .react-datepicker__time-list-item {
+  border-radius: 10px !important;
+  margin: 2px 6px !important;
+  color: rgba(245, 246, 255, 0.9) !important;
+}
+
+.period-picker .react-datepicker__time-list-item:hover {
+  background: rgba(99, 89, 233, 0.18) !important;
+}
+
+.period-picker .react-datepicker__time-list-item--selected {
+  background: rgba(43, 210, 190, 0.28) !important;
+  color: rgba(245, 246, 255, 0.98) !important;
+  font-weight: 700 !important;
+}
+
