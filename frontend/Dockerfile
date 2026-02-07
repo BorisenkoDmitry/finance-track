@@ -9,7 +9,8 @@ COPY . .
 # runs `tsc -b` and fails on type errors). We'll still produce the production bundle.
 # Also bump Node heap to avoid OOM on small servers.
 ENV NODE_OPTIONS=--max_old_space_size=2048
-RUN npx vite build
+ARG VITE_BASE=/
+RUN npx vite build --base="${VITE_BASE}"
 
 FROM nginx:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf

@@ -35,10 +35,13 @@ services:
       timeout: 3s
       retries: 30
 
+  # Normal domain frontend (base=/)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_BASE: "/"
     container_name: finance-track-frontend
     restart: unless-stopped
     depends_on:
@@ -46,6 +49,26 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8080:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # IP path frontend for http://<ip>/app/finance (base=/app/finance/)
+  frontend_appfinance:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BASE: "/app/finance/"
+    container_name: finance-track-frontend-appfinance
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8081:80"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1"]
       interval: 5s

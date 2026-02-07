@@ -2,8 +2,17 @@ import type { InternalAxiosRequestConfig } from "axios";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+const baseUrlRaw = (import.meta as any).env?.BASE_URL ?? "/";
+const basePath =
+  typeof baseUrlRaw === "string" && baseUrlRaw.endsWith("/")
+    ? baseUrlRaw.slice(0, -1)
+    : baseUrlRaw;
+const apiBase = `${basePath === "" ? "" : basePath}/api/`;
+const loginPath = `${basePath === "" ? "" : basePath}/auth/login`;
+const homePath = `${basePath === "" ? "" : basePath}/`;
+
 const axiosInstance = axios.create({
-  baseURL: "/api/",
+  baseURL: apiBase,
   withCredentials: true,
 });
 
@@ -33,10 +42,10 @@ axiosInstance.interceptors.response.use(
       // window.location.href = "/auth/login";
 
       // 3. Показать уведомление пользователю
-      if (window.location.pathname != "/auth/login") {
+      if (window.location.pathname !== loginPath) {
         toast.error("Требуется авторизация. Пожалуйста, войдите в систему.");
         setTimeout(() => {
-          window.location.href = "/";
+          window.location.href = homePath;
         }, 1000);
       }
 
