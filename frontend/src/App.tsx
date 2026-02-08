@@ -26,18 +26,13 @@ import { ResponsiveGuard } from "./components/UI/ResponsiveGuard/ResponsiveGuard
 function App() {
   const dispatch = useAppDispatch();
   const isAuth = useAppSelector((st) => st.user.user);
-  const basenameRaw = (import.meta as any).env?.BASE_URL ?? "/";
-  const basename =
-    typeof basenameRaw === "string" && basenameRaw.endsWith("/")
-      ? basenameRaw.slice(0, -1)
-      : basenameRaw;
   useEffect(() => {
     dispatch(userMe());
   }, [dispatch]);
   return (
     <>
       <ResponsiveGuard minWidth={1200} />
-      <BrowserRouter basename={basename === "" ? "/" : basename}>
+      <BrowserRouter>
         <Routes>
           {/* Если не авторизован, любые попытки зайти в защищённые страницы будут редиректить на /auth/login */}
           <Route
