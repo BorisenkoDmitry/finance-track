@@ -63,7 +63,7 @@ export const getFinanceAnaliticExp = createAsyncThunk<
   async ({ catalogIds, dateEnd, dateStart }, { rejectWithValue }) => {
     try {
       const res = await Promise.all(
-        catalogIds.map((x) =>
+        (catalogIds || []).map((x) =>
           api
             .get(
               `finance/range-exps?dateStart=${dateStart}&dateEnd=${dateEnd}&catalogId=${x}`
@@ -72,22 +72,35 @@ export const getFinanceAnaliticExp = createAsyncThunk<
         )
       );
 
-      const modify = res.map((x) => {
+      const modify: FinanceAnaliticResponse[] = res.map((x) => {
+        const startDate = new Date(dateStart);
+        const year = startDate.getFullYear();
+        const month = startDate.getMonth();
+        
+        const filledExps = fillMonthDays(
+          x.exps.financeAnalitic,
+          startDate
+        );
+        const filledBudgets = fillMonthDays(
+          x.budgets.financeAnalitic,
+          startDate,
+          x.budgets.totalPeriodBudgets
+        );
+        
         return {
           ...x,
           exps: {
-            financeAnalitic: fillMonthDays(
-              x.exps.financeAnalitic,
-              new Date(dateStart)
-            ),
+            financeAnalitic: filledExps.map((item) => ({
+              total: String(item.total),
+              day: new Date(year, month, item.day),
+            })),
             totalPeriodExp: x.exps.totalPeriodExp,
           },
           budgets: {
-            financeAnalitic: fillMonthDays(
-              x.budgets.financeAnalitic,
-              new Date(dateStart),
-              x.budgets.totalPeriodBudgets
-            ),
+            financeAnalitic: filledBudgets.map((item) => ({
+              total: String(item.total),
+              day: new Date(year, month, item.day),
+            })),
             totalPeriodBudgets: x.budgets.totalPeriodBudgets,
           },
         };

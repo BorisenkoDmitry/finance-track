@@ -178,13 +178,13 @@ export const deleteExpDetailApi = createAsyncThunk<
     .delete(`expDetail/${obj.id}`, {
       data: { expID: obj.expID },
     })
-    .then(async (resp) => {
+    .then(async (resp: { data: unknown }) => {
       return resp.data;
     })
-    .then((d) => {
+    .then((d: unknown) => {
       return d;
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       return rejectWithValue(err);
     })
     .finally(() => {

@@ -7,13 +7,13 @@ exports.typeOrmSyncConfig = {
     useFactory: (ConfigService) => ({
         type: 'postgres',
         host: ConfigService.get('HOST'),
-        port: ConfigService.get('PORT'),
+        port: Number(ConfigService.get('PORT')),
         username: ConfigService.get('NAMEUSER'),
         password: ConfigService.get('PASSWORD'),
         database: ConfigService.get('DATABASE'),
         autoLoadEntities: true,
-        synchronize: true,
-        logging: true,
+        synchronize: String(ConfigService.get('TYPEORM_SYNC') ?? 'true') === 'true',
+        logging: String(ConfigService.get('TYPEORM_LOGGING') ?? 'false') === 'true',
     }),
     inject: [config_1.ConfigService],
 };

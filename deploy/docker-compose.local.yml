@@ -1,0 +1,18 @@
+services:
+  # Optional local overrides for debugging:
+  # - bind Postgres to host
+  # - bind backend to host
+  # - run web on 8080 to avoid port 80 conflicts
+
+  db:
+    ports:
+      - "5432:5432"
+
+  backend:
+    ports:
+      - "3000:3000"
+
+  web:
+    ports:
+      - "8080:80"
+

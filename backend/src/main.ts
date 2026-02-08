@@ -6,8 +6,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { seedBootstrap } from './bootstrap/seed';
 
-function parseCorsOrigins(v: string | undefined): string[] {
-  if (!v) return ['http://localhost:5173'];
+function parseCorsOrigins(v: unknown): string[] {
+  if (typeof v !== 'string' || !v.trim()) return ['http://localhost:5173'];
   return v
     .split(',')
     .map((x) => x.trim())
@@ -26,13 +26,19 @@ async function bootstrap() {
   );
 
   const config = app.get(ConfigService);
-  const origins = parseCorsOrigins(config.get<string>('CORS_ORIGINS'));
+  const origins = parseCorsOrigins(config.get('CORS_ORIGINS'));
   app.enableCors({
     origin: origins,
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+    ],
     credentials: true,
-    optionSuccessStatus: 200,
+    optionsSuccessStatus: 200,
   });
 
   app.useStaticAssets(join(__dirname, '..', 'public'), {
@@ -43,5 +49,8 @@ async function bootstrap() {
 
   const port = Number(config.get('APP_PORT') ?? 3000);
   await app.listen(port);
+  // Helpful for debugging local/prod routing and proxies
+  // (e.g. Vite /api proxy, Nginx location /api/)
+  console.log(`API listening on ${await app.getUrl()}`);
 }
 void bootstrap();

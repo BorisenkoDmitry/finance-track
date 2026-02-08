@@ -5,6 +5,10 @@
 - **Backend (NestJS)** на `:3000`
 - **Web (Nginx)** на `:80`, отдаёт фронт и проксирует `/api/*` в backend
 
+### Цель: одинаковая среда локально и на сервере
+Мы используем **один и тот же** `deploy/docker-compose.yml` и **один и тот же набор переменных** в `deploy/.env`.
+Разница только в значениях (домен/секреты/пароли), но структура переменных и команда запуска одинаковые.
+
 ### 0) Важно про безопасность
 - Не храните логин/пароль SSH в репозитории.
 - После первого входа лучше перейти на **SSH key** и сменить пароль.
@@ -59,13 +63,37 @@ nano deploy/.env
 
 ```bash
 cd deploy
-docker compose --env-file .env up -d --build
+docker compose up -d --build
 docker compose ps
 ```
 
 Проверка:
 - `curl -I http://localhost/` (должен отдать фронт)
 - `curl -I http://localhost/api/auth/me` (должен отвечать 401/200)
+
+### Локальный запуск (тот же самый Compose)
+Вариант 1 (как на сервере, порт 80):
+
+```bash
+cd deploy
+cp env.example .env
+# отредактируйте .env при необходимости
+docker compose up -d --build
+```
+
+Откройте: `http://localhost/`
+
+Вариант 2 (локальные порты для отладки, web на 8080 + доступ к db/backend):
+
+```bash
+cd deploy
+cp env.example .env
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+```
+
+Откройте: `http://localhost:8080/`
+
+> Windows: см. `deploy/LOCAL_SETUP_WINDOWS.md` (WSL2 + Docker Desktop + запуск).
 
 ### 6) HTTPS (рекомендуется)
 Самый простой вариант — поставить Nginx на хосте + certbot, а контейнерный nginx слушать только 127.0.0.1.

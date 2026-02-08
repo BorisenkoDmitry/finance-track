@@ -225,16 +225,22 @@ const catalogsSlice = createSlice({
       })
       .addCase(getCatalogApi.fulfilled, (state, action) => {
         state.isLoading = false;
-        const keys = [
+        const keys: (keyof categoryState)[] = [
           "typeInc",
           "categoryExpList",
           "sourceIncList",
           "methodInc",
         ];
         action.payload.fCatalog.forEach((x) => {
-          state[keys[x.type - 1]] = x.arr.map((x) => {
-            return { label: x.name, value: x.id, color: x.color };
-          });
+          const keyIndex = x.type - 1;
+          if (keyIndex >= 0 && keyIndex < keys.length) {
+            const key = keys[keyIndex];
+            if (key === "typeInc" || key === "categoryExpList" || key === "sourceIncList" || key === "methodInc") {
+              state[key] = x.arr.map((x) => {
+                return { label: x.name, value: x.id, color: x.color };
+              });
+            }
+          }
         });
         state.catalogsFull = action.payload.Catalogs;
       });

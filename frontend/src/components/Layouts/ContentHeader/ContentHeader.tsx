@@ -4,6 +4,7 @@ import { DateRangeField } from "../../UI/DateField/DateRangeField";
 type DateOptions = {
   isMonth: boolean;
   isYear: boolean;
+  isDay?: boolean;
 };
 
 interface IContentHeader {

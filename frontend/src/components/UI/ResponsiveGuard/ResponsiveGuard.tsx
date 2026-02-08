@@ -14,15 +14,9 @@ export const ResponsiveGuard: FC<ResponsiveGuardProps> = ({ minWidth = 1200 }) =
     const apply = () => setIsTooSmall(Boolean(mql.matches));
     apply();
 
-    // Safari fallback: addListener/removeListener
-    if ("addEventListener" in mql) {
-      mql.addEventListener("change", apply);
-      return () => mql.removeEventListener("change", apply);
-    }
-    // eslint-disable-next-line deprecation/deprecation
-    mql.addListener(apply);
-    // eslint-disable-next-line deprecation/deprecation
-    return () => mql.removeListener(apply);
+    // Use addEventListener (modern API)
+    mql.addEventListener("change", apply);
+    return () => mql.removeEventListener("change", apply);
   }, [mq]);
 
   useEffect(() => {

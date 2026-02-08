@@ -9,17 +9,12 @@ class FieldsMethodsClass {
 
     // Поддерживаем один разделитель: если оба есть, используем первый по порядку
     let sepIndex = -1;
-    let sepChar = "";
     if (dotIndex !== -1 && commaIndex !== -1) {
       sepIndex = Math.min(dotIndex, commaIndex);
-      sepChar = cleaned[sepIndex];
     } else if (dotIndex !== -1) {
       sepIndex = dotIndex;
-      sepChar = ".";
     } else if (commaIndex !== -1) {
       sepIndex = commaIndex;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      sepChar = ",";
     }
 
     if (sepIndex === -1) {

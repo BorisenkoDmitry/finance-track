@@ -1,4 +1,3 @@
-import type { InternalAxiosRequestConfig } from "axios";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -8,10 +7,21 @@ const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    const token = localStorage.getItem("token");
-    const auth = token ? `Bearer ${JSON.parse(token)} 2` : "";
-    config.headers.Authorization = auth;
+  (config) => {
+    const raw = localStorage.getItem("token");
+    let token: string | null = raw;
+    if (raw) {
+      try {
+        // token may be stored as JSON string (e.g. "\"abc\"") or plain string ("abc")
+        const parsed = JSON.parse(raw) as unknown;
+        token = typeof parsed === "string" ? parsed : raw;
+      } catch {
+        token = raw;
+      }
+    }
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {

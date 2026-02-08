@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import Switch from "react-switch";
+import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/storeHook";
 import { deleteImage, uploadImage } from "../../../stores/userSlice";
 import { ContentHeader } from "../../Layouts/ContentHeader/ContentHeader";
@@ -7,7 +6,6 @@ import { ContentMain } from "../../Layouts/ContentMain/ContentMain";
 import { Loader } from "../../UI/Loader/Loader";
 import { UploadImage } from "../../UI/UploadImage/UploadImage";
 import { SettingsFormPassword } from "./SettingsFormPassword/SettingsFormPassword";
-import { CardsPay } from "./CardsPay/CardsPay";
 
 export const Settings = () => {
   const {
@@ -15,7 +13,6 @@ export const Settings = () => {
     isLoadingImage,
     isLoading,
   } = useAppSelector((st) => st.user);
-  const [checked, setChecked] = useState(false);
   const dispatch = useAppDispatch();
 
   const url = useMemo(() => {

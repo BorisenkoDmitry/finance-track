@@ -1,10 +1,22 @@
 FROM node:20-alpine AS build
+
+# Set working directory
 WORKDIR /app/frontend
 
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+# Copy package files for dependency installation
+COPY frontend/package.json ./
+COPY frontend/package-lock.json* ./
 
+# Install dependencies
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+# Copy all source files
 COPY frontend/ ./
+
+# Run TypeScript check first to see errors
+RUN npx tsc --noEmit || true
+
+# Build the application
 RUN npm run build
 
 FROM nginx:1.27-alpine
