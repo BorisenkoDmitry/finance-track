@@ -1,3 +1,18 @@
-# Dependencies
+# secrets / local env
+.env
+postgres.env
+SECRETS.txt
+backend/.env.production
+
+# postgres volume
+postgres-data/
+
+# node
 **/node_modules/
 
+# build artifacts
+backend/dist/
+frontend/dist/
+
+# logs
+*.log
