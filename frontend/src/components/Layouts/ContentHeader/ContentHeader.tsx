@@ -40,7 +40,7 @@ export const ContentHeader: FC<IContentHeader> = memo(
       >
         <div className="flex flex-col gap-4">
           <h1 className="text-[32px] tracking-[-0.02em] text-primary-500">
-            {title}test
+            {title}
           </h1>
           {subtitle && (
             <div className="text-xs">{subtitle}</div>
