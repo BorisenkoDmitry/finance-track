@@ -6,12 +6,11 @@ interface IContentMain {
 }
 
 export const ContentMain: FC<IContentMain> = ({
-
   children,
   className,
 }) => {
   return (
-    <div className={["app-scroll overflow-y-auto", className].filter(Boolean).join(" ")}>
+    <div className={["custom-scrollbar overflow-y-auto pb-20 lg:pb-0 animate-fade-in", className].filter(Boolean).join(" ")}>
       {children}
     </div>
   );

@@ -4,6 +4,7 @@ import {
   type WritableDraft,
 } from "@reduxjs/toolkit";
 import api from "../../Api/api";
+import { extractApiError } from "../../types/api";
 import type { RootState } from "../store";
 import type { ExpDetailItem, ExpItem, expState } from "./expSlice";
 import { getFinanceRemaining } from "../financeSlice/financeSlice";
@@ -39,7 +40,7 @@ export const getExpApi = createAsyncThunk<ExpItem[], getExpDto>(
       })
       .catch((err) => {
 
-        return rejectWithValue(err);
+        return rejectWithValue(extractApiError(err));
       });
   }
 );
@@ -66,7 +67,7 @@ export const updateExpApi = createAsyncThunk<void, ExpItem>(
         });
       return a as void;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getExpApi({
@@ -99,7 +100,7 @@ export const updateExpDetailApi = createAsyncThunk<
         return resp.data as ExpDetailItem;
       });
   } catch (err) {
-    return rejectWithValue(err);
+    return rejectWithValue(extractApiError(err));
   }
 });
 
@@ -123,7 +124,7 @@ export const createExpDetailApi = createAsyncThunk<
       return { ...(d as ExpDetailItem), isEdit: true };
     })
     .catch((err) => {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     });
 });
 
@@ -135,7 +136,7 @@ export const createExpApi = createAsyncThunk<ExpItem, Omit<ExpItem, "id">>(
       const data = await api.post(`exp`, { catalogId, descr, price, date });
       return data.data as ExpItem;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(getFinanceRemaining());
     }
@@ -155,7 +156,7 @@ export const deleteExpApi = createAsyncThunk<void, ExpItem>(
       });
       return a as undefined;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getExpApi({
@@ -173,23 +174,17 @@ export const deleteExpDetailApi = createAsyncThunk<
   void,
   { id: string; expID: string }
 >("deleteExpDetail", async (obj, { dispatch, rejectWithValue }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (api as any)
-    .delete(`expDetail/${obj.id}`, {
+  try {
+    await api.request({
+      method: "DELETE",
+      url: `expDetail/${obj.id}`,
       data: { expID: obj.expID },
-    })
-    .then(async (resp) => {
-      return resp.data;
-    })
-    .then((d) => {
-      return d;
-    })
-    .catch((err) => {
-      return rejectWithValue(err);
-    })
-    .finally(() => {
-      dispatch(getFinanceRemaining());
     });
+  } catch (err) {
+    return rejectWithValue(extractApiError(err));
+  } finally {
+    dispatch(getFinanceRemaining());
+  }
 });
 
 export const expBuilder = (

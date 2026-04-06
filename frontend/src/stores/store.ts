@@ -8,6 +8,7 @@ import globalSlice from "./globalSlice";
 import financeSlice from "./financeSlice/financeSlice";
 import noteSlice from "./NotesSlice/noteSlice";
 import planSlice from "./planSlice/planSlice";
+import tagSlice from "./tagSlice/tagSlice";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     finance: financeSlice,
     notes: noteSlice,
     plans: planSlice,
+    tags: tagSlice,
   },
 });
 

@@ -1,5 +1,4 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { Button } from "../../../UI/Button/Button";
 import { InputField } from "../../../UI/Input/Input";
 import { useAppDispatch, useAppSelector } from "../../../../hooks/storeHook";
 import { changePassword, resetIsChanged } from "../../../../stores/userSlice";
@@ -41,9 +40,10 @@ export const SettingsFormPassword = () => {
   const onSubmit: SubmitHandler<ISetFormFields> = (data) => {
     dispatch(changePassword(data));
   };
+
   return (
     <form
-      className="mt-8 flex max-w-[300px] flex-col gap-4 p-1.5"
+      className="flex max-w-[400px] flex-col gap-4"
       onSubmit={handleSubmit(onSubmit)}
     >
       <InputField
@@ -52,9 +52,7 @@ export const SettingsFormPassword = () => {
         {...register("oldPassword", {
           required: "Пароль обязателен",
         })}
-        errorText={
-          errors.oldPassword?.message ? errors.oldPassword.message : null
-        }
+        errorText={errors.oldPassword?.message ?? null}
       />
       <InputField
         label="Новый пароль"
@@ -63,17 +61,14 @@ export const SettingsFormPassword = () => {
           required: "Пароль обязателен",
           minLength: {
             value: 6,
-            message: "Пароль должен содержать не менее 6 символов",
+            message: "Минимум 6 символов",
           },
           pattern: {
             value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-            message:
-              "Пароль должен содержать хотя бы одну заглавную букву, одну строчную букву и одну цифру",
+            message: "Заглавная, строчная буква и цифра",
           },
         })}
-        errorText={
-          errors.newPassword?.message ? errors.newPassword.message : null
-        }
+        errorText={errors.newPassword?.message ?? null}
       />
       <InputField
         label="Подтвердите новый пароль"
@@ -82,21 +77,23 @@ export const SettingsFormPassword = () => {
           required: "Пароль обязателен",
           minLength: {
             value: 6,
-            message: "Пароль должен содержать не менее 6 символов",
+            message: "Минимум 6 символов",
           },
           pattern: {
             value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-            message:
-              "Пароль должен содержать хотя бы одну заглавную букву, одну строчную букву и одну цифру",
+            message: "Заглавная, строчная буква и цифра",
           },
         })}
-        errorText={
-          errors.newPasswordRepeat?.message
-            ? errors.newPasswordRepeat.message
-            : null
-        }
+        errorText={errors.newPasswordRepeat?.message ?? null}
       />
-      <Button>Сохранить</Button>
+      <button
+        type="submit"
+        className="group relative mt-1 w-full overflow-hidden rounded-xl py-3 text-sm font-semibold text-grey-0 transition-all duration-300 hover:shadow-glow-md"
+        style={{ background: "linear-gradient(135deg, #FF7582 0%, #C56C86 50%, #725A7A 100%)" }}
+      >
+        <span className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
+        <span className="relative z-10">Изменить пароль</span>
+      </button>
     </form>
   );
 };

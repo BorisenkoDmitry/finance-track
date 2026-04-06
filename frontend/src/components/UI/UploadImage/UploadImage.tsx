@@ -67,13 +67,16 @@ export const UploadImage: FC<IUploadImage> = ({
               }}
               {...dragProps}
               className={
-                imageList.length === 0
-                  ? "flex h-20 w-20 cursor-pointer items-center justify-center border border-neutral-600 p-1.5"
-                  : "flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full p-0 transition-opacity hover:opacity-50"
+                imageList.length === 0 && image === null
+                  ? "flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-primary-700/30 bg-primary-900/30 transition-all hover:border-primary-500/40 hover:bg-primary-900/50"
+                  : "flex h-20 w-20 cursor-pointer items-center justify-center overflow-hidden rounded-full ring-2 ring-primary-700/30 ring-offset-2 ring-offset-primary-900 transition-all hover:ring-primary-500/40 hover:opacity-80"
               }
             >
               {imageList.length === 0 && image === null ? (
-                <CiImageOn className="text-[40px] text-neutral-600" />
+                <div className="flex flex-col items-center gap-0.5">
+                  <CiImageOn className="text-[24px] text-primary-400/50" />
+                  <span className="text-[8px] text-grey-200/30">Фото</span>
+                </div>
               ) : (
                 <img
                   src={image}

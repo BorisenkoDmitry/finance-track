@@ -24,7 +24,9 @@ export const SelectField: FC<ISelectField> = ({ label, list, selected, onChange 
           options={list}
           placeholder="Не выбрано"
           onChange={onChange}
+          menuPortalTarget={document.body}
           unstyled
+          styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
           classNames={{
             control: (state) =>
               [
@@ -36,7 +38,7 @@ export const SelectField: FC<ISelectField> = ({ label, list, selected, onChange 
             singleValue: () => "text-grey-0",
             indicatorsContainer: () => "text-grey-200",
             menu: () =>
-              "mt-1 overflow-hidden rounded-xl border border-primary-700/40 bg-primary-900/95 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.85)] backdrop-blur",
+              "z-50 mt-1 overflow-hidden rounded-xl border border-primary-700/40 bg-primary-900/95 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.85)] backdrop-blur",
             option: (state) =>
               [
                 "cursor-pointer px-3 py-2 text-sm",

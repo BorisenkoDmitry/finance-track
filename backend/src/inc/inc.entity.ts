@@ -1,8 +1,11 @@
 import { User } from 'src/auth/auth.entity';
+import { TagEntity } from 'src/tags/tags.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -36,4 +39,12 @@ export class IncEntity {
 
   @Column()
   userId: string;
+
+  @ManyToMany(() => TagEntity, (tag) => tag.incs)
+  @JoinTable({
+    name: 'inc_tags',
+    joinColumn: { name: 'inc_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
+  })
+  tags: TagEntity[];
 }

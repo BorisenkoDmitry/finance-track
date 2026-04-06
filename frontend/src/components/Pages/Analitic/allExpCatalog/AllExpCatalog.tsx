@@ -2,281 +2,235 @@ import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
+  CartesianGrid,
   Cell,
+  Legend,
   Pie,
   PieChart,
-  Sector,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
 } from "recharts";
-import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import { useAppSelector } from "../../../../hooks/storeHook";
-import {
-  monthsList,
-  monthsListGenitiveСase,
-} from "../../../../utils/constants";
+import { monthsList } from "../../../../utils/constants";
 import { consolidateByDay } from "../../../../utils/mergeAllExpGraphic";
-import { CheckboxField } from "../../../UI/CheckboxField/CheckboxField";
+import { EmptyState } from "../../../UI/EmptyState/EmptyState";
+import { BarChart3 } from "lucide-react";
 
-const renderActiveShape = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  startAngle,
-  endAngle,
-  fill,
-  payload,
-  percent,
-  value,
-}: PieSectorDataItem) => {
-  const RADIAN = Math.PI / 180;
-  const sin = Math.sin(-RADIAN * (midAngle ?? 1));
-  const cos = Math.cos(-RADIAN * (midAngle ?? 1));
-  const sx = (cx ?? 0) + ((outerRadius ?? 0) + 10) * cos;
-  const sy = (cy ?? 0) + ((outerRadius ?? 0) + 10) * sin;
-  const mx = (cx ?? 0) + ((outerRadius ?? 0) + 30) * cos;
-  const my = (cy ?? 0) + ((outerRadius ?? 0) + 30) * sin;
-  const ex = mx + (cos >= 0 ? 1 : -1) * 22;
-  const ey = my;
-  const textAnchor = cos >= 0 ? "start" : "end";
-
-  return (
-    <g>
-      <text
-        x={cx}
-        y={cy}
-        dy={8}
-        textAnchor="middle"
-        fill={fill}
-        style={{
-          zIndex: 3,
-        }}
-      >
-        {payload.name}
-      </text>
-      <Sector
-        cx={cx}
-        cy={cy}
-        innerRadius={innerRadius}
-        outerRadius={outerRadius}
-        startAngle={startAngle}
-        endAngle={endAngle}
-        fill={fill}
-      />
-      <Sector
-        cx={cx}
-        cy={cy}
-        startAngle={startAngle}
-        endAngle={endAngle}
-        innerRadius={(outerRadius ?? 0) + 6}
-        outerRadius={(outerRadius ?? 0) + 10}
-        fill={fill}
-      />
-      <path
-        d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`}
-        stroke={fill}
-        fill="none"
-      />
-      <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
-      <text
-        style={{
-          fontSize: "12px",
-        }}
-        x={ex + (cos >= 0 ? 1 : -1) * 12}
-        y={ey}
-        textAnchor={textAnchor}
-        fill="#333"
-      >{`${value.toLocaleString()} ₽`}</text>
-      <text
-        style={{
-          fontSize: "12px",
-        }}
-        x={ex + (cos >= 0 ? 1 : -1) * 12}
-        y={ey}
-        dy={18}
-        textAnchor={textAnchor}
-        fill="#999"
-      >
-        {`(${Number(((percent ?? 1) * 100).toFixed(2)).toLocaleString()}%)`}
-      </text>
-    </g>
-  );
-};
+const fmt = (n: number) => n.toLocaleString("ru-RU");
 
 export const AllExpCatalog = () => {
-  const { financeAnaliticResp } = useAppSelector((state) => state.finance);
+  const { financeAnaliticResp } = useAppSelector((st) => st.finance);
+  const { start } = useAppSelector((st) => st.global.periodDate);
 
-  const [checkedVisible, setVisible] = useState(
-    financeAnaliticResp.map((x) => x.catalogName)
+  const [visibleCats, setVisibleCats] = useState<Set<string>>(
+    () => new Set(financeAnaliticResp.map((x) => x.catalogName))
   );
-  const { start } = useAppSelector((state) => state.global.periodDate);
 
-  const dataPraphic = useMemo(() => {
+  const toggle = (name: string) => {
+    setVisibleCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  const { lineData, pieData, totalExp } = useMemo(() => {
     const n = financeAnaliticResp.map((x) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const arr: any[] = [];
+      const arr: (Record<string, unknown> & { day: number })[] = [];
       x.exps.financeAnalitic.forEach((t) => {
         arr.push({
-          [x.catalogName]: {
-            total: t.total,
-          },
-          day: t.day,
+          [x.catalogName]: { total: t.total },
+          day: typeof t.day === "number" ? t.day : new Date(t.day).getDate(),
         });
       });
       return arr;
     });
-    const pie = financeAnaliticResp.map((x) => {
-      return {
-        value: Number(x.exps.totalPeriodExp),
-        name: x.catalogName,
-        color: x.catalogColor,
-      };
-    });
-    console.log(pie);
-    return {
-      line: consolidateByDay(n),
-      pie,
-    };
+
+    const pie = financeAnaliticResp.map((x) => ({
+      value: Number(x.exps.totalPeriodExp) || 0,
+      name: x.catalogName,
+      color: x.catalogColor || "#FF7582",
+    }));
+
+    const total = pie.reduce((s, p) => s + p.value, 0);
+
+    return { lineData: consolidateByDay(n), pieData: pie.filter((p) => p.value > 0), totalExp: total };
   }, [financeAnaliticResp]);
 
+  if (!financeAnaliticResp || financeAnaliticResp.length === 0) {
+    return <EmptyState icon={<BarChart3 size={24} />} title="Нет данных" subtitle="Добавьте расходы для отображения аналитики" />;
+  }
+
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex gap-8">
-        <div className="mb-8 flex flex-col justify-between gap-2">
-          {financeAnaliticResp.map((x, i) => {
+    <div className="flex flex-col gap-6">
+      {/* ─── Line chart ─── */}
+      <div className="rounded-2xl border border-primary-700/15 p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-grey-0">Расходы по дням</h3>
+          <span className="text-xs text-grey-200/40">
+            {monthsList[new Date(start).getMonth()]} {new Date(start).getFullYear()}
+          </span>
+        </div>
+
+        {/* Category toggles */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {financeAnaliticResp.map((cat) => {
+            const active = visibleCats.has(cat.catalogName);
+            const color = cat.catalogColor || "#FF7582";
             return (
-              <CheckboxField
-                key={i}
-                checked={checkedVisible.includes(x.catalogName)}
-                onChange={() => {
-                  if (checkedVisible.includes(x.catalogName)) {
-                    setVisible(
-                      checkedVisible.filter((item) => item != x.catalogName)
-                    );
-                  } else {
-                    setVisible([...checkedVisible, x.catalogName]);
-                  }
-                }}
-                label={x.catalogName}
-                color={x.catalogColor}
-              />
+              <button
+                key={cat.catalogName}
+                onClick={() => toggle(cat.catalogName)}
+                className={[
+                  "flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-all duration-200",
+                  active
+                    ? "bg-primary-500/15 text-grey-0"
+                    : "bg-primary-900/30 text-grey-200/30",
+                ].join(" ")}
+              >
+                <span
+                  className={["h-2 w-2 rounded-full transition-opacity", active ? "" : "opacity-30"].join(" ")}
+                  style={{ backgroundColor: color }}
+                />
+                {cat.catalogName}
+              </button>
             );
           })}
         </div>
-        <AreaChart
-          width={"100%"}
-          height={430}
-          data={dataPraphic.line}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        >
-          <defs>
-            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <XAxis dataKey="day" />
-          <YAxis />
 
-          <Tooltip
-            content={(x) => {
-              return (
-                <div className="app-surface p-5">
-                  {x.payload[0]?.payload &&
-                    Object.entries(x.payload[0]?.payload).map(([k, v], i) => {
-                      if (k === "day") {
-                        return (
-                          <div
-                            className="mb-1 font-bold"
-                            key={i}
-                          >
-                            {JSON.stringify(v)}{" "}
-                            {monthsListGenitiveСase[new Date(start).getMonth()]}{" "}
-                            {new Date(start).getFullYear()} года:
-                          </div>
-                        );
-                      }
-                      return (
-                        <div
-                          style={{
-                            color: financeAnaliticResp.filter(
-                              (x) => x.catalogName === k
-                            )[0]?.catalogColor,
-                          }}
-                          key={i}
-                        >
-                          {k}:{" "}
-                          {Number(
-                            (v as { total?: number }).total
-                          ).toLocaleString()}
-                          {` ₽`}
-                        </div>
-                      );
-                    })}
-                </div>
-              );
-            }}
-          />
-          {financeAnaliticResp.map((x, i) => {
-            if (checkedVisible.includes(x.catalogName)) {
-              return (
-                <Area
-                  key={i}
-                  type="monotone"
-                  dataKey={`${x.catalogName}.total`}
-                  stroke={x.catalogColor != null ? x.catalogColor : "#8884d8"}
-                  strokeWidth={2}
-                  fillOpacity={0.3}
-                  fill={"transparent"}
-                />
-              );
-            }
-          })}
-        </AreaChart>
-      </div>
-      <div className="mx-auto mt-8 flex max-w-[800px] flex-col items-center justify-center text-center">
-        <p className="text-xl">
-          Сумма расходов за {monthsList[new Date(start).getMonth()]} по
-          категориям
-        </p>
-        <PieChart
-          style={{
-            width: "100%",
-            maxWidth: "600px",
-            maxHeight: "80vh",
-            aspectRatio: 1,
-          }}
-          responsive
-        >
-          <Pie
-            data={dataPraphic.pie}
-            activeShape={renderActiveShape}
-            fill="#8884d8"
-            dataKey="value"
-            // isAnimationActive={isAnimationActive}
-          >
-            {dataPraphic.pie.map((entry) => (
-              <Cell key={`cell-${entry.name}`} fill={entry.color} />
-            ))}
-            <Tooltip
-              content={(v) => {
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={lineData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                {financeAnaliticResp.map((cat) => (
+                  <linearGradient key={cat.catalogName} id={`grad-cat-${cat.catalogName}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={cat.catalogColor || "#FF7582"} stopOpacity={0.2} />
+                    <stop offset="100%" stopColor={cat.catalogColor || "#FF7582"} stopOpacity={0} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(90,58,74,0.08)" vertical={false} />
+              <XAxis
+                dataKey="day"
+                tick={{ fill: "rgba(168,155,167,0.3)", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fill: "rgba(168,155,167,0.3)", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: "rgba(12,19,30,0.95)",
+                  border: "1px solid rgba(90,58,74,0.2)",
+                  borderRadius: 12,
+                  fontSize: 12,
+                  color: "#f0e6ef",
+                }}
+                labelFormatter={(day) => `День ${day}`}
+                formatter={(value: { total?: number }, name: string) => {
+                  const v = typeof value === "object" ? Number(value.total) : Number(value);
+                  return [`${fmt(v)} ₽`, name.replace(".total", "")];
+                }}
+              />
+              {financeAnaliticResp.map((cat) => {
+                if (!visibleCats.has(cat.catalogName)) return null;
+                const color = cat.catalogColor || "#FF7582";
                 return (
-                  <div className="app-surface p-2">
-                    {v.payload[0]?.name}
+                  <Area
+                    key={cat.catalogName}
+                    type="monotone"
+                    dataKey={`${cat.catalogName}.total`}
+                    stroke={color}
+                    strokeWidth={2}
+                    fill={`url(#grad-cat-${cat.catalogName})`}
+                    dot={false}
+                    activeDot={{ r: 4, strokeWidth: 0, fill: color }}
+                  />
+                );
+              })}
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* ─── Pie chart + category list ─── */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Pie */}
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-primary-700/15 p-5">
+          <h3 className="mb-2 text-sm font-semibold text-grey-0">Распределение расходов</h3>
+          <div className="h-[280px] w-full max-w-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  strokeWidth={0}
+                >
+                  {pieData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: "rgba(12,19,30,0.95)",
+                    border: "1px solid rgba(90,58,74,0.2)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                    color: "#f0e6ef",
+                  }}
+                  formatter={(value: number) => [`${fmt(value)} ₽`]}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: 11, color: "rgba(168,155,167,0.6)" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Category breakdown */}
+        <div className="rounded-2xl border border-primary-700/15 p-5">
+          <h3 className="mb-4 text-sm font-semibold text-grey-0">По категориям</h3>
+          <div className="flex flex-col gap-2">
+            {pieData
+              .sort((a, b) => b.value - a.value)
+              .map((cat) => {
+                const pct = totalExp > 0 ? (cat.value / totalExp) * 100 : 0;
+                return (
+                  <div key={cat.name}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: cat.color }} />
+                        <span className="text-sm text-grey-100">{cat.name}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-bold tabular-nums text-grey-0">{fmt(cat.value)} ₽</span>
+                        <span className="text-[10px] tabular-nums text-grey-200/40">{pct.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary-800/40">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: cat.color }}
+                      />
+                    </div>
                   </div>
                 );
-              }}
-              defaultIndex={0}
-            />
-          </Pie>
-        </PieChart>
+              })}
+          </div>
+        </div>
       </div>
     </div>
   );

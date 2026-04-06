@@ -224,6 +224,50 @@ export class AuthService {
     this.jwtService.sign(user, { expiresIn: '0.5s' });
   }
 
+  async refreshAccessToken(refreshToken: string) {
+    const tokenRecord = await this.tokenRepo.findOne({
+      where: { token: refreshToken },
+    });
+
+    if (!tokenRecord) {
+      throw new UnauthorizedException('Refresh token не найден');
+    }
+
+    if (new Date(tokenRecord.exp) < new Date()) {
+      await this.tokenRepo.remove(tokenRecord);
+      throw new UnauthorizedException('Refresh token истёк');
+    }
+
+    const user = await this.userRep.findOne({
+      where: { id: tokenRecord.userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+
+    const accessToken = this.jwtService.sign(
+      {
+        id: user.id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        roles: user.roles,
+      },
+      { expiresIn: '1h' },
+    );
+
+    // Rotate refresh token
+    await this.tokenRepo.remove(tokenRecord);
+    const newRefreshToken = await this.GetRefreshToken(user.id);
+
+    return {
+      accessToken,
+      refreshToken: newRefreshToken.token,
+    };
+  }
+
   async changeUserRole(
     @Body() { roleID, userID }: { roleID: string; userID: string },
   ) {

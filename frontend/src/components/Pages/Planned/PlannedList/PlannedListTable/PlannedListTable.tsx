@@ -15,6 +15,7 @@ import { formatPrice } from "../../../../../utils/parsePrice";
 import { Button } from "../../../../UI/Button/Button";
 import { PlannedProgressBar } from "../PlannedProgressBar/PlannedProgressBar";
 import { DataGridTable } from "../../../../UI/DataGridTable/DataGridTable";
+import { EmptyState } from "../../../../UI/EmptyState/EmptyState";
 
 const columnHelper = createColumnHelper<PlanItem>();
 
@@ -84,7 +85,7 @@ export const PlannedListTable = () => {
     ] satisfies Array<ColumnDef<PlanItem, unknown>>;
   }, []);
 
-  if (plansList.length === 0) return "Список пуст...";
+  if (plansList.length === 0) return <EmptyState title="Нет планов" subtitle="Добавьте первый финансовый план" />;
   return (
     <DataGridTable<PlanItem>
       data={plansList}

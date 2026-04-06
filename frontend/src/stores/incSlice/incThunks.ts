@@ -7,6 +7,7 @@ import type { IncItem, incState } from "./incSlice";
 import type { RootState } from "../store";
 import toast from "react-hot-toast";
 import api from "../../Api/api";
+import { extractApiError } from "../../types/api";
 import { getFinanceRemaining } from "../financeSlice/financeSlice";
 
 interface getIncApiDTO {
@@ -30,7 +31,7 @@ export const getIncApi = createAsyncThunk<IncItem[], getIncApiDTO>(
         }`
       )
       .then((data) => data.data)
-      .catch((err) => rejectWithValue(err));
+      .catch((err) => rejectWithValue(extractApiError(err)));
     return data;
   }
 );
@@ -59,7 +60,7 @@ export const createIncApi = createAsyncThunk<IncItem, IncItem>(
         .then((data) => data.data);
       return data as IncItem;
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getIncApi({
@@ -97,7 +98,7 @@ export const updateIncApi = createAsyncThunk<IncItem, IncItem>(
         .then((data) => data.data);
       return data;
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getIncApi({
@@ -122,7 +123,7 @@ export const deleteIncApi = createAsyncThunk<void, string>(
       const a = await api.delete(`inc/${id}`).then((data) => data.data);
       return a as undefined;
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getIncApi({

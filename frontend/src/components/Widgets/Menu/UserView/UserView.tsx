@@ -1,63 +1,49 @@
 import { useEffect } from "react";
-import { TbUsers } from "react-icons/tb";
-import { useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../hooks/storeHook";
 import { getFinanceRemaining } from "../../../../stores/financeSlice/financeSlice";
-import { logoutApi } from "../../../../stores/userSlice";
+
+function formatUserName(name?: string, surname?: string): string {
+  if (!surname && !name) return "Пользователь";
+  if (surname && name) return `${surname} ${name[0]}.`;
+  return surname || name || "Пользователь";
+}
+
+function getInitials(name?: string, surname?: string): string {
+  const first = surname?.[0] ?? name?.[0] ?? "?";
+  return first.toUpperCase();
+}
 
 export const UserView = () => {
-  const financeCount = useAppSelector(
-    (state) => state.finance.remainingFinance
-  );
-
   const user = useAppSelector((st) => st.user.user);
-  const nav = useNavigate();
-
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     dispatch(getFinanceRemaining());
   }, [dispatch]);
 
+  const displayName = formatUserName(user.user?.name, user.user?.surname);
+  const initials = getInitials(user.user?.name, user.user?.surname);
+
   return (
-    <div className="mt-auto flex gap-4 text-grey-200">
-      <div className="flex h-[30px] w-[30px] items-center justify-center overflow-hidden rounded-full bg-black/10">
-        {user.user.imageUrl === null ? (
-          <TbUsers className="text-[22px] text-[#383838]" />
-        ) : (
-          <img
-            className="h-full w-full rounded-full object-cover object-center"
-            src={`/api/static/${user.user.imageUrl}`}
-            alt="user avatar"
-          />
-        )}
+    <NavLink
+      to="/settings"
+      className="flex items-center gap-3 rounded-xl px-2 py-2 transition-all duration-200 hover:bg-primary-700/20"
+    >
+      {user.user?.imageUrl ? (
+        <img
+          className="h-9 w-9 shrink-0 rounded-full object-cover"
+          src={`/api/static/${user.user.imageUrl}`}
+          alt="avatar"
+        />
+      ) : (
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-sm font-bold text-accent-500">
+          {initials}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-grey-0">{displayName}</p>
       </div>
-      <div className="flex flex-col gap-2">
-        <p className="font-semibold text-primary-500">
-          {user.user.name} {user.user.surname}
-        </p>
-        {/* <p className="text-xs">
-          Статус:{" "}
-          {user.user.roles.map((x) => x.name).includes("PaydUser") ? (
-            <span className="text-green-500">оплачено</span>
-          ) : (
-            <span className="text-red-500">не оплачено</span>
-          )}
-        </p> */}
-        <p className="text-xs">
-          Баланс финансов: {financeCount?.toLocaleString()} P
-        </p>
-        <p className="text-xs">Почта: {user.user.email}</p>
-        <button
-          className="mt-1 inline-flex w-max rounded-lg bg-primary-500 px-2 py-2 text-grey-0 transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
-          onClick={(e) => {
-            e.preventDefault();
-            dispatch(logoutApi()).finally(() => nav("/"));
-          }}
-        >
-          Выйти
-        </button>
-      </div>
-    </div>
+    </NavLink>
   );
 };

@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import api from "../../Api/api";
 import toast from "react-hot-toast";
+import { extractApiError } from "../../types/api";
 
 type TypeItem = {
   name: string;
@@ -67,7 +68,7 @@ export const getCatalogApi = createAsyncThunk<
       };
     })
     .catch((err) => {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     });
 });
 
@@ -92,7 +93,7 @@ export const createCatalogApi = createAsyncThunk<
         });
       return data;
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(getCatalogApi());
     }
@@ -120,7 +121,7 @@ export const updateCatalogApi = createAsyncThunk<
         });
       return data;
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(getCatalogApi());
     }
@@ -225,16 +226,19 @@ const catalogsSlice = createSlice({
       })
       .addCase(getCatalogApi.fulfilled, (state, action) => {
         state.isLoading = false;
-        const keys = [
+        const keys: (keyof Pick<categoryState, "typeInc" | "categoryExpList" | "sourceIncList" | "methodInc">)[] = [
           "typeInc",
           "categoryExpList",
           "sourceIncList",
           "methodInc",
         ];
         action.payload.fCatalog.forEach((x) => {
-          state[keys[x.type - 1]] = x.arr.map((x) => {
-            return { label: x.name, value: x.id, color: x.color };
-          });
+          const key = keys[x.type - 1];
+          if (key) {
+            state[key] = x.arr.map((item) => {
+              return { label: item.name, value: item.id, color: item.color };
+            });
+          }
         });
         state.catalogsFull = action.payload.Catalogs;
       });

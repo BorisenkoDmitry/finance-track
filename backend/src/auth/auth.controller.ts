@@ -62,6 +62,12 @@ export class AuthController {
     return this.authService.authJoin(params);
   }
 
+  @Public()
+  @Post('refresh')
+  refreshToken(@Body() { refreshToken }: { refreshToken: string }) {
+    return this.authService.refreshAccessToken(refreshToken);
+  }
+
   @Delete(':id')
   async deleteUserWithRelations(@Param('id') id: string): Promise<void> {
     return this.authService.deleteUserWithRelations(id);

@@ -48,9 +48,9 @@ class ParseDate {
     const endYear = e.getFullYear();
   
     // helper: начало года
-    const startOfYear = (yr) => new Date(yr, 0, 1, 0, 0, 0, 0);
+    const startOfYear = (yr: number) => new Date(yr, 0, 1, 0, 0, 0, 0);
     // helper: конец года
-    const endOfYear = (yr) => new Date(yr, 11, 31, 23, 59, 59, 999);
+    const endOfYear = (yr: number) => new Date(yr, 11, 31, 23, 59, 59, 999);
   
     if (startYear === endYear) {
       // один год

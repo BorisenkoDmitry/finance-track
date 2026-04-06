@@ -18,10 +18,11 @@ import { Notes } from "./components/Pages/Notes/Notes";
 import { PlannedCalendar } from "./components/Pages/Planned/PlannedCalendar/PlannedCalendar";
 import { PlannedList } from "./components/Pages/Planned/PlannedList/PlannedList";
 import { Settings } from "./components/Pages/Settings/Settings";
+import { Integrations } from "./components/Pages/Integrations/Integrations";
 import { Users } from "./components/Pages/Users/Users";
 import { useAppDispatch, useAppSelector } from "./hooks/storeHook";
 import { userMe } from "./stores/userSlice";
-import { ResponsiveGuard } from "./components/UI/ResponsiveGuard/ResponsiveGuard";
+// ResponsiveGuard removed — full responsive design
 
 function App() {
   const dispatch = useAppDispatch();
@@ -31,7 +32,7 @@ function App() {
   }, [dispatch]);
   return (
     <>
-      <ResponsiveGuard minWidth={1200} />
+      {/* ResponsiveGuard removed — full responsive design */}
       <BrowserRouter>
         <Routes>
           {/* Если не авторизован, любые попытки зайти в защищённые страницы будут редиректить на /auth/login */}
@@ -144,6 +145,12 @@ function App() {
               }
             />
 
+            <Route
+              path="integrations"
+              element={
+                isAuth ? <Integrations /> : <Navigate to="/auth/login" replace />
+              }
+            />
             <Route
               path="settings"
               element={

@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   createAsyncThunk,
   type ActionReducerMapBuilder,
-  type PayloadAction,
   type WritableDraft,
 } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
 import api from "../../Api/api";
+import { extractApiError, getErrorMessage, type ApiErrorPayload } from "../../types/api";
 import type { NoteItem, NoteState } from "./noteSlice";
 
 export enum isDeletedEnum {
@@ -34,7 +33,7 @@ export const getNotesApi = createAsyncThunk<NoteItem[], getNotesDTO>(
         return resp.data;
       })
       .catch((err) => {
-        return rejectWithValue(err);
+        return rejectWithValue(extractApiError(err));
       });
   }
 );
@@ -56,7 +55,7 @@ export const createNoteApi = createAsyncThunk<NoteItem, createNoteDTO>(
         return resp.data;
       })
       .catch((err) => {
-        return rejectWithValue(err);
+        return rejectWithValue(extractApiError(err));
       });
   }
 );
@@ -81,7 +80,7 @@ export const updateNoteApi = createAsyncThunk<NoteItem, updateNoteDTO>(
         return resp.data;
       })
       .catch((err) => {
-        return rejectWithValue(err);
+        return rejectWithValue(extractApiError(err));
       });
   }
 );
@@ -95,7 +94,7 @@ export const deleteNoteToHistoryApi = createAsyncThunk<void, string>(
         return resp.data;
       })
       .catch((err) => {
-        return rejectWithValue(err);
+        return rejectWithValue(extractApiError(err));
       });
   }
 );
@@ -109,7 +108,7 @@ export const deleteNoteAlwaysApi = createAsyncThunk<void, string>(
         return resp.data;
       })
       .catch((err) => {
-        return rejectWithValue(err);
+        return rejectWithValue(extractApiError(err));
       });
   }
 );
@@ -133,8 +132,8 @@ export const noteBuilder = (
   builder.addCase(createNoteApi.pending, (st) => {
     st.isLoading = true;
   });
-  builder.addCase(createNoteApi.rejected, (st, action: PayloadAction<any>) => {
-    toast.error(`Ошибка: ${action.payload.response?.data.message.join(", ")}`);
+  builder.addCase(createNoteApi.rejected, (st, action) => {
+    toast.error(`Ошибка: ${getErrorMessage(action.payload as ApiErrorPayload)}`);
     st.isLoading = false;
   });
   builder.addCase(createNoteApi.fulfilled, (st) => {

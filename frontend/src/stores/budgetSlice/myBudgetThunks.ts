@@ -11,6 +11,7 @@ import type {
 } from "./myBudgetSlice";
 
 import api from "../../Api/api";
+import { extractApiError } from "../../types/api";
 import type { TypeCatalog } from "../catalogSlice/catalogsSlice";
 import toast from "react-hot-toast";
 
@@ -35,7 +36,7 @@ export const getBudgetsApi = createAsyncThunk<myBudgetItem[], IBudgetDTO>(
       .then((d) => {
         return d;
       })
-      .catch((err) => rejectWithValue(err));
+      .catch((err) => rejectWithValue(extractApiError(err)));
   }
 );
 
@@ -56,7 +57,7 @@ export const createBudgetsApi = createAsyncThunk<myBudgetItem, myBudgetItem>(
         });
       return a;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getBudgetsApi({
@@ -81,7 +82,7 @@ export const editBudgetsApi = createAsyncThunk<myBudgetItem, myBudgetItem>(
       });
       return data;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getBudgetsApi({
@@ -104,7 +105,7 @@ export const deleteBudgetsApi = createAsyncThunk<void, { id: string }>(
       });
       return data;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(
         getBudgetsApi({

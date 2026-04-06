@@ -1,10 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../Api/api";
+import { extractApiError } from "../../types/api";
 import { fillMonthDays } from "../../utils/compareForPraphics";
 
 export type financeAnaliticItem = {
-  total: string;
-  day: Date;
+  total: string | number;
+  day: Date | number;
 };
 
 export type FinanceAnaliticResponse = {
@@ -44,7 +45,7 @@ export const getFinanceRemaining = createAsyncThunk(
       const res = await api.get("finance");
       return res.data as { total: number };
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -95,7 +96,7 @@ export const getFinanceAnaliticExp = createAsyncThunk<
 
       return modify;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -121,11 +122,10 @@ export const getFinanceAnaliticIncExp = createAsyncThunk<
   return api
     .get(`finance/range-inc?dateStart=${b.dateStart}&dateEnd=${b.dateEnd}`)
     .then((d) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = (d.data as any).aggregates as FinanceAnaliticIncExpResponse;
+      const res = (d.data as { aggregates: FinanceAnaliticIncExpResponse }).aggregates;
       return res;
     })
-    .catch((err) => rejectWithValue(err));
+    .catch((err) => rejectWithValue(extractApiError(err)));
 });
 
 const st = createSlice({

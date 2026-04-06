@@ -152,18 +152,18 @@ export const DateField: FC<IDateField> = ({
 
       {open && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-[color:var(--popup--bg-clr)] backdrop-blur-[3px]">
-          <div className="period-picker period-picker--single app-surface-strong relative w-[820px] max-w-[95vw] p-4">
+          <div className="period-picker period-picker--single app-surface-strong relative max-w-[95vw] p-6">
             <button
               type="button"
-              className="app-icon-btn absolute right-3 top-3 h-10 w-10 rounded-full"
+              className="app-icon-btn absolute right-3 top-3 h-8 w-8 rounded-lg"
               onClick={() => setOpen(false)}
               aria-label="Закрыть"
             >
-              <IoClose className="text-[22px]" />
+              <IoClose className="text-[18px]" />
             </button>
 
-            <div className="mt-2 grid grid-cols-12 gap-4">
-              <div className="col-span-12">
+            <div className="flex flex-col gap-4">
+              <div>
                 <DatePicker
                   key={calendarKey}
                   inline
@@ -189,72 +189,82 @@ export const DateField: FC<IDateField> = ({
                 />
               </div>
 
-              <div className="col-span-12 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-end gap-3">
-                  {!isMonth && (
-                    <label className="flex flex-col gap-1">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-grey-200/80">
-                        Дата
-                      </span>
-                      <InputMask
-                        mask="99.99.9999"
-                        maskChar={null}
-                        value={dateText}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setDateText(v);
-                          const parsed = parseMaskDate(v);
-                          if (!parsed) return;
-                          const next = new Date(draft);
-                          next.setFullYear(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-                          setDraft(next);
-                          setOpenToDate(next);
-                          setCalendarKey((k) => k + 1);
-                        }}
-                      >
-                        {(inputProps) => (
-                          <input {...inputProps} className="app-input w-[200px] text-center" />
-                        )}
-                      </InputMask>
-                    </label>
-                  )}
+              {/* Date & Time inputs + actions */}
+              <div className="flex flex-wrap items-end gap-3">
+                {!isMonth && (
+                  <label className="flex flex-1 flex-col gap-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-grey-200/40">
+                      Дата
+                    </span>
+                    <InputMask
+                      mask="99.99.9999"
+                      maskChar={null}
+                      value={dateText}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setDateText(v);
+                        const parsed = parseMaskDate(v);
+                        if (!parsed) return;
+                        const next = new Date(draft);
+                        next.setFullYear(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+                        setDraft(next);
+                        setOpenToDate(next);
+                        setCalendarKey((k) => k + 1);
+                      }}
+                    >
+                      {(inputProps) => (
+                        <input {...inputProps} className="app-input py-2.5 text-center text-sm" />
+                      )}
+                    </InputMask>
+                  </label>
+                )}
 
-                  {isTimeOn && !isMonth && (
-                    <label className="flex flex-col gap-1">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-grey-200/80">
-                        Время
-                      </span>
-                      <InputMask
-                        mask="99:99"
-                        maskChar={null}
-                        value={timeText}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setTimeText(v);
-                          const parsed = parseMaskTime(v);
-                          if (!parsed) return;
-                          const next = new Date(draft);
-                          next.setHours(parsed.h, parsed.m, 0, 0);
-                          setDraft(next);
-                          setCalendarKey((k) => k + 1);
-                        }}
-                      >
-                        {(inputProps) => (
-                          <input {...inputProps} className="app-input w-[140px] text-center" />
-                        )}
-                      </InputMask>
-                    </label>
-                  )}
-                </div>
+                {isTimeOn && !isMonth && (
+                  <label className="flex w-[100px] flex-col gap-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-widest text-grey-200/40">
+                      Время
+                    </span>
+                    <InputMask
+                      mask="99:99"
+                      maskChar={null}
+                      value={timeText}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setTimeText(v);
+                        const parsed = parseMaskTime(v);
+                        if (!parsed) return;
+                        const next = new Date(draft);
+                        next.setHours(parsed.h, parsed.m, 0, 0);
+                        setDraft(next);
+                        setCalendarKey((k) => k + 1);
+                      }}
+                    >
+                      {(inputProps) => (
+                        <input {...inputProps} className="app-input py-2.5 text-center text-sm" />
+                      )}
+                    </InputMask>
+                  </label>
+                )}
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <Button theme="grey" onClick={() => setOpen(false)} type="button">
-                    Отмена
-                  </Button>
-                  <Button theme="green" onClick={apply} type="button" disabled={disabled}>
-                    Применить
-                  </Button>
-                </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-xl border border-primary-700/20 py-2.5 text-sm font-medium text-grey-200/60 transition-all hover:bg-primary-700/15 hover:text-grey-0"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="button"
+                  onClick={apply}
+                  disabled={disabled}
+                  className="group relative flex-1 overflow-hidden rounded-xl py-2.5 text-sm font-semibold text-grey-0 transition-all duration-300 hover:shadow-glow-md disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg, #FF7582 0%, #C56C86 50%, #725A7A 100%)" }}
+                >
+                  <span className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
+                  <span className="relative z-10">Применить</span>
+                </button>
               </div>
             </div>
           </div>

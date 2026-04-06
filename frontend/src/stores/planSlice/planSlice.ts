@@ -5,6 +5,7 @@ import {
 } from "@reduxjs/toolkit";
 import toast from "react-hot-toast";
 import api from "../../Api/api";
+import { extractApiError, getErrorMessage, type ApiErrorPayload } from "../../types/api";
 
 export type PlanDetailItem = {
   id: string;
@@ -52,7 +53,7 @@ export const getPlansApi = createAsyncThunk<PlanItem[]>(
     return api
       .get("/plan")
       .then((d) => d.data as PlanItem[])
-      .catch((err) => rejectWithValue(err));
+      .catch((err) => rejectWithValue(extractApiError(err)));
   }
 );
 
@@ -74,7 +75,7 @@ export const createPlansApi = createAsyncThunk<PlanItem, createPlansApiDTO>(
         planColor,
       })
       .then((d) => d.data as PlanItem)
-      .catch((err) => rejectWithValue(err));
+      .catch((err) => rejectWithValue(extractApiError(err)));
   }
 );
 
@@ -84,7 +85,7 @@ export const deletePlanApi = createAsyncThunk<{ isDeleted: boolean }, string>(
     return api
       .delete(`/plan/${id}`)
       .then((d) => d.data as { isDeleted: boolean })
-      .catch((err) => rejectWithValue(err));
+      .catch((err) => rejectWithValue(extractApiError(err)));
   }
 );
 
@@ -108,7 +109,7 @@ export const onCheckPlanDatailApi = createAsyncThunk<
         planId,
       };
     })
-    .catch((err) => rejectWithValue(err));
+    .catch((err) => rejectWithValue(extractApiError(err)));
 });
 
 const PlanSlice = createSlice({
@@ -151,12 +152,7 @@ const PlanSlice = createSlice({
       state.isLoading = true;
     });
     build.addCase(createPlansApi.rejected, (state, action) => {
-      toast.error(
-        `Ошибка при создании плана: ${
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (action.payload as any).response.data.message
-        }`
-      );
+      toast.error(`Ошибка при создании плана: ${getErrorMessage(action.payload as ApiErrorPayload)}`);
       state.isLoading = false;
     });
     build.addCase(createPlansApi.fulfilled, (state) => {

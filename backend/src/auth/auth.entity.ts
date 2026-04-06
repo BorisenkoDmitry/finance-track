@@ -16,6 +16,7 @@ import { Exp } from 'src/exp/exp.entity';
 import { ExpDetail } from 'src/exp/expDetail/expdetail.entity';
 import { NoteEntity } from 'src/Notes/notes.entity';
 import { PlanEntity } from 'src/plans/plan.entity';
+import { TagEntity } from 'src/tags/tags.entity';
 
 @Entity({ name: 'users' })
 @Unique(['phone'])
@@ -79,4 +80,7 @@ export class User {
 
   @OneToMany(() => PlanEntity, (t) => t.user)
   plans: PlanEntity[];
+
+  @OneToMany(() => TagEntity, (t) => t.user)
+  tags: TagEntity[];
 }

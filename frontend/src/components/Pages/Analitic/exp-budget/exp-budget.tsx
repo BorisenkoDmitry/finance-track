@@ -1,169 +1,162 @@
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
 } from "recharts";
 import { useAppSelector } from "../../../../hooks/storeHook";
 import { type FinanceAnaliticResponse } from "../../../../stores/financeSlice/financeSlice";
-import { monthsListGenitiveСase } from "../../../../utils/constants";
 import { Loader } from "../../../UI/Loader/Loader";
+import { EmptyState } from "../../../UI/EmptyState/EmptyState";
+import { BarChart3, TrendingDown, TrendingUp } from "lucide-react";
 
-type CombinedPoint = {
-  day: number;
-  exp: number;
-  budget: number;
-};
+const fmt = (n: number) => n.toLocaleString("ru-RU");
 
-
-function parseNumberFromString(s: string): number {
-  // Добавьте нужную вам логику парсинга (например, просто числовой parseFloat)
-  const n = parseFloat(s);
-  return Number.isNaN(n) ? 0 : n;
-}
+type CombinedPoint = { day: number; exp: number; budget: number };
 
 function combineFinanceData(resp: FinanceAnaliticResponse): CombinedPoint[] {
   const exps = resp.exps.financeAnalitic;
   const bds = resp.budgets.financeAnalitic;
-
-  // Предполагаем одинаковую длину массивов и соответствие по индексу дня
   const len = Math.min(exps.length, bds.length);
-
   const result: CombinedPoint[] = [];
-
   for (let i = 0; i < len; i++) {
-    const e = exps[i];
-    const b = bds[i];
-
     result.push({
-      day: (e.day === b.day ? e.day : 0) as number,
-      exp: parseNumberFromString(e.total),
-      budget: parseNumberFromString(b.total),
+      day: Number(exps[i].day) || i + 1,
+      exp: parseFloat(String(exps[i].total)) || 0,
+      budget: parseFloat(String(bds[i].total)) || 0,
     });
   }
-
   return result;
 }
 
 export const ExpFinance = () => {
-  const { start } = useAppSelector((state) => state.global.periodDate);
-  const { financeAnaliticResp, isLoadingFinanceRem } = useAppSelector(
-    (state) => state.finance
-  );
+  const { financeAnaliticResp, isLoadingFinanceRem } = useAppSelector((st) => st.finance);
 
-  const CheckExpAndBudgets = (budgetsCount: number, expCount: number) => {
-    console.log(budgetsCount, expCount);
-    if (budgetsCount - expCount < 0) {
-      return `Вы превысили ваш бюджет на ${Math.abs(
-        budgetsCount - expCount
-      ).toLocaleString()} P`;
-    } else if (budgetsCount - expCount === 0) {
-      return `Вы уложились в бюджет`;
-    } else {
-      return `Вы уложились в бюджет и сэкономили ${(
-        budgetsCount - expCount
-      ).toLocaleString()} P`;
-    }
-  };
+  if (!financeAnaliticResp || financeAnaliticResp.length === 0) {
+    return <EmptyState icon={<BarChart3 size={24} />} title="Нет данных" subtitle="Добавьте расходы и бюджеты для отображения аналитики" />;
+  }
 
   return (
     <div className="relative">
-      <ul className="grid grid-cols-2 gap-5">
-        {financeAnaliticResp?.map((x) => {
-          return (
-            <li
-              key={x.catalogName}
-              className="rounded-2xl border border-primary-500 p-5"
-            >
-              <div className="mb-5 text-[18px] font-bold text-primary-500">
-                {x.catalogName}
-              </div>
-              <div className="mb-2.5 flex items-center gap-2.5">
-                <div
-                  className="h-[10px] w-[10px] rounded-full"
-                  style={{ backgroundColor: x.catalogColor ?? "#000" }}
-                />
-                Фактический показатель, общий:{" "}
-                <span
-                  className="font-bold"
-                  style={{ color: x.catalogColor ?? "#000" }}
-                >
-                  {Math.floor(Number(x.exps.totalPeriodExp)).toLocaleString()}{` ₽`}
-                </span>
-              </div>
-              <div className="mb-2.5 flex items-center gap-2.5">
-                <div
-                  className="h-[10px] w-[10px] rounded-full bg-[#82ca9d]"
-                />
-                Бюджетный показатель, общий:{" "}
-                <span className="font-bold text-[#82ca9d]">
-                  {Math.floor(
-                    Number(x.budgets.totalPeriodBudgets)
-                  ).toLocaleString()}{` ₽`}
-                </span>
-              </div>
-              <p className="mb-5 text-sm font-bold text-primary-500">
-                {CheckExpAndBudgets(
-                  Math.floor(Number(x.budgets.totalPeriodBudgets)) ?? 0,
-                  Math.floor(Number(x.exps.totalPeriodExp)) ?? 0
-                )}{` ₽`}
-              </p>
-
-              <AreaChart
-                width={"100%"}
-                height={230}
-                data={combineFinanceData(x)}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <XAxis dataKey="day" color="#bdbdbd"/>
-                <YAxis color="#bdbdbd"/>
-                {/* <CartesianGrid strokeDasharray="2" /> */}
-                <Tooltip
-                  content={(data) => {
-                    if (data.payload.length > 0) {
-                      const obj = {
-                        date:
-                          data.payload[1].payload.day +
-                          ` ${monthsListGenitiveСase[new Date(start).getMonth()]} ${new Date(
-                            start
-                          ).getFullYear()} года`,
-                        budget: data.payload[1].payload.budget,
-                        exp: data.payload[1].payload.exp,
-                      };
-                      return (
-                        <div className="rounded-[10px] bg-primary-900 p-4 text-sm text-grey-0">
-                          <p>
-                            <b>{obj.date}</b>
-                          </p>
-                          <p>Фактический расход за сутки: {obj.exp.toLocaleString()}{` ₽`}</p>
-                          <p>Бюджет на расход за сутки: {obj.budget.toLocaleString()}{` ₽`}</p>
-                        </div>
-                      );
-                    }
-                  }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="budget"
-                  stroke={"#1d4c9b"}
-                  fillOpacity={0.8}
-                  fill={"#1d4c9b"}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="exp"
-                  stroke={x.catalogColor != null ? x.catalogColor : "#000"}
-                  fillOpacity={0.4}
-                  fill={x.catalogColor != null ? x.catalogColor : "#000"}
-                />
-              </AreaChart>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {financeAnaliticResp.map((item) => (
+          <ExpBudgetCard key={item.catalogName} data={item} />
+        ))}
+      </div>
       <Loader isLoading={isLoadingFinanceRem} />
+    </div>
+  );
+};
+
+const ExpBudgetCard = ({ data }: { data: FinanceAnaliticResponse }) => {
+  const expTotal = Math.floor(Number(data.exps.totalPeriodExp) || 0);
+  const budgetTotal = Math.floor(Number(data.budgets.totalPeriodBudgets) || 0);
+  const diff = budgetTotal - expTotal;
+  const isOver = diff < 0;
+  const color = data.catalogColor || "#FF7582";
+
+  const chartData = useMemo(() => combineFinanceData(data), [data]);
+
+  return (
+    <div className="rounded-2xl border border-primary-700/15 p-5 transition-all duration-300 hover:border-primary-700/30">
+      {/* Header */}
+      <div className="mb-4 flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
+            <div className="absolute inset-0 rounded-xl opacity-20 blur-[2px]" style={{ backgroundColor: color }} />
+            <div className="relative h-4 w-4 rounded-md" style={{ backgroundColor: color }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-grey-0">{data.catalogName}</h3>
+            <p className={`text-[11px] font-medium ${isOver ? "text-red-400" : "text-green-400"}`}>
+              {isOver ? `Превышение на ${fmt(Math.abs(diff))} ₽` : diff === 0 ? "В рамках бюджета" : `Экономия ${fmt(diff)} ₽`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="mb-4 flex gap-4">
+        <div className="flex items-center gap-2">
+          <TrendingDown size={13} className="text-red-400/60" />
+          <div>
+            <p className="text-[10px] text-grey-200/40">Расходы</p>
+            <p className="text-sm font-bold tabular-nums" style={{ color }}>{fmt(expTotal)} ₽</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <TrendingUp size={13} className="text-green-400/60" />
+          <div>
+            <p className="text-[10px] text-grey-200/40">Бюджет</p>
+            <p className="text-sm font-bold tabular-nums text-green-400">{fmt(budgetTotal)} ₽</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="h-[160px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id={`grad-exp-${data.catalogName}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id={`grad-bud-${data.catalogName}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#4ade80" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="#4ade80" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(90,58,74,0.1)" vertical={false} />
+            <XAxis
+              dataKey="day"
+              tick={{ fill: "rgba(168,155,167,0.3)", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fill: "rgba(168,155,167,0.3)", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "rgba(12,19,30,0.95)",
+                border: "1px solid rgba(90,58,74,0.2)",
+                borderRadius: 12,
+                fontSize: 12,
+                color: "#f0e6ef",
+              }}
+              formatter={(value: number, name: string) => [
+                `${fmt(value)} ₽`,
+                name === "exp" ? "Расход" : "Бюджет",
+              ]}
+              labelFormatter={(day) => `День ${day}`}
+            />
+            <Area
+              type="monotone"
+              dataKey="budget"
+              stroke="#4ade80"
+              strokeWidth={1.5}
+              fill={`url(#grad-bud-${data.catalogName})`}
+              dot={false}
+            />
+            <Area
+              type="monotone"
+              dataKey="exp"
+              stroke={color}
+              strokeWidth={2}
+              fill={`url(#grad-exp-${data.catalogName})`}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0, fill: color }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

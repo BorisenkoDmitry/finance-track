@@ -13,6 +13,7 @@ import { RoleModule } from './roles/roles.module';
 import { FinanceModule } from './finance/finance.module';
 import { NoteModule } from './Notes/notes.module';
 import { PlanModule } from './plans/plan.module';
+import { TagsModule } from './tags/tags.module';
 import { AvatarModule } from './auth/avatarUser/avatarUser.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -41,6 +42,7 @@ import { join } from 'path';
     FinanceModule,
     NoteModule,
     PlanModule,
+    TagsModule,
     AvatarModule,
   ],
   controllers: [AppController],

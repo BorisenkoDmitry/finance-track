@@ -44,7 +44,7 @@ export const PlannedShutDownPopup = () => {
               dispatch(deletePlanApi(currentItem.id)).finally(() => {
                 const obj: ExpItem = {
                   ...getEmptyExp(),
-                  price: parseFloat(currentItem.planPrice),
+                  price: Number(currentItem.planPrice),
                   date: currentItem.planDate,
                   descr: currentItem.planName,
                 };

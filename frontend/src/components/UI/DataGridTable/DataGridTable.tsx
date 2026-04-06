@@ -173,7 +173,7 @@ export function DataGridTable<TData>({
   columns,
   getRowId,
   showRowNumber = true,
-  rowNumberColumnSize = 72,
+  rowNumberColumnSize = 48,
   enableMultiSelect = false,
   selectionColumnSize = 52,
   rowSelection: rowSelectionProp,
@@ -182,7 +182,7 @@ export function DataGridTable<TData>({
   onEditRow,
   onDeleteRow,
   renderRowActions,
-  actionsColumnSize = 160,
+  actionsColumnSize = 100,
   enableColumnResizing = false,
   columnSizing: columnSizingProp,
   onColumnSizingChange,
@@ -271,7 +271,7 @@ export function DataGridTable<TData>({
           size: rowNumberColumnSize,
           header: "№",
           cell: ({ row }) => (
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-700/40 text-xs font-semibold text-grey-0 ring-1 ring-primary-700/50">
+            <span className="text-xs tabular-nums text-grey-200/30">
               {row.index + 1}
             </span>
           ),
@@ -288,20 +288,18 @@ export function DataGridTable<TData>({
         columnHelper.display({
           id: "__actions",
           size: actionsColumnSize,
-          header: "Действия",
+          header: "",
           cell: ({ row }) => {
             const original = row.original;
 
             if (renderRowActions) return renderRowActions(original);
 
-            const iconBtnBase = "app-icon-btn h-9 w-9";
-
             return (
-              <div className="flex items-center justify-start gap-2">
+              <div className="flex items-center justify-start gap-1 opacity-0 transition-opacity duration-200 [div[role=row]:hover_&]:opacity-100">
                 {onEditRow && (
                   <button
                     type="button"
-                    className={iconBtnBase}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-grey-200/40 transition-colors hover:bg-primary-700/20 hover:text-grey-0"
                     onClick={() => onEditRow(original)}
                     aria-label="Редактировать"
                   >
@@ -311,7 +309,7 @@ export function DataGridTable<TData>({
                 {onDeleteRow && (
                   <button
                     type="button"
-                    className={[iconBtnBase, "hover:text-red-300"].join(" ")}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-grey-200/40 transition-colors hover:bg-red-500/15 hover:text-red-400"
                     onClick={() => onDeleteRow(original)}
                     aria-label="Удалить"
                   >
@@ -422,20 +420,107 @@ export function DataGridTable<TData>({
   return (
     <div
       className={[
-        "app-surface-strong",
+        "max-w-full overflow-hidden",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="dg-scroll max-w-full overflow-auto">
-        <div role="table" className="p-2" style={{ minWidth }}>
+      {/* ═══ MOBILE CARD VIEW ═══ */}
+      <div className="rounded-2xl border border-primary-700/12 bg-primary-900/15 lg:hidden">
+        {table.getRowModel().rows.map((row, rowIdx) => {
+          const original = row.original;
+          const cells = row.getVisibleCells().filter((c) => !c.column.id.startsWith("__"));
+          const rowClassName = getRowClassName?.(original);
+          const after = renderRowAfter?.({ row: original, rowId: row.id });
+
+          const firstCell = cells[0];
+          const numericCell = cells.find((c) => getMeta(c.column).isNumeric);
+          const otherCells = cells.filter((c) => c !== firstCell && c !== numericCell);
+          const isLast = rowIdx === table.getRowModel().rows.length - 1;
+
+          return (
+            <div
+              key={row.id}
+              className={[
+                "px-4 py-3",
+                !isLast ? "border-b border-primary-700/8" : "",
+                "transition-colors duration-150 active:bg-primary-700/8",
+                rowClassName,
+              ].filter(Boolean).join(" ")}
+            >
+              {/* Content row */}
+              <div className="flex items-center gap-3">
+                {/* Row number */}
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-700/15 text-[10px] font-medium tabular-nums text-grey-200/30">
+                  {row.index + 1}
+                </span>
+
+                {/* Main info */}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-grey-0">
+                    {firstCell && flexRender(firstCell.column.columnDef.cell, firstCell.getContext())}
+                  </p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    {otherCells.slice(0, 2).map((cell) => (
+                      <span key={cell.id} className="truncate text-[11px] text-grey-200/30">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price */}
+                {numericCell && (
+                  <span className="shrink-0 text-sm font-bold tabular-nums">
+                    {flexRender(numericCell.column.columnDef.cell, numericCell.getContext())}
+                  </span>
+                )}
+              </div>
+
+              {/* Actions — compact */}
+              {hasActions && (
+                <div className="mt-2 flex items-center gap-1 pl-10">
+                  {renderRowActions ? (
+                    renderRowActions(original)
+                  ) : (
+                    <>
+                      {onEditRow && (
+                        <button type="button" className="flex h-6 w-6 items-center justify-center rounded-md text-grey-200/25 active:bg-primary-700/20 active:text-grey-0" onClick={() => onEditRow(original)}>
+                          <RiEdit2Line size={13} />
+                        </button>
+                      )}
+                      {onDeleteRow && (
+                        <button type="button" className="flex h-6 w-6 items-center justify-center rounded-md text-grey-200/25 active:bg-red-500/15 active:text-red-400" onClick={() => onDeleteRow(original)}>
+                          <RiDeleteBin3Line size={13} />
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {enableMultiSelect && (
+                    <div className="ml-auto">
+                      <GridCheckbox checked={row.getIsSelected()} disabled={!row.getCanSelect()} ariaLabel="Выбрать" onChange={(next) => row.toggleSelected(next)} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {after && <div className="mt-2 pl-10">{after}</div>}
+            </div>
+          );
+        })}
+
+      </div>
+
+      {/* ═══ DESKTOP TABLE VIEW ═══ */}
+      <div className="hidden max-w-full overflow-x-auto lg:block app-surface-strong">
+        <div role="table" style={{ minWidth }}>
         <div className="sticky top-0 z-10">
           {table.getHeaderGroups().map((hg) => (
             <div
               role="row"
               key={hg.id}
-              className="grid items-center rounded-2xl border border-primary-700/30 bg-primary-900/25 backdrop-blur"
+              className="grid items-center border-b border-primary-700/15"
               style={{ gridTemplateColumns }}
             >
               {hg.headers.map((header) => {
@@ -453,7 +538,7 @@ export function DataGridTable<TData>({
                     role="columnheader"
                     key={header.id}
                     className={[
-                      "relative px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-grey-100/90",
+                      "relative px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-grey-200/50",
                       "text-left",
                       "whitespace-normal break-words",
                       meta.headerClassName,
@@ -506,7 +591,7 @@ export function DataGridTable<TData>({
           ))}
         </div>
 
-        <div role="rowgroup" className="mt-2 space-y-2">
+        <div role="rowgroup">
           {table.getRowModel().rows.map((row) => {
             const original = row.original;
             const after = renderRowAfter?.({ row: original, rowId: row.id });
@@ -516,9 +601,9 @@ export function DataGridTable<TData>({
                 <div
                   role="row"
                   className={[
-                    "grid items-center rounded-2xl border border-primary-700/25 bg-primary-900/20",
-                    "transition-[background-color,box-shadow,border-color] duration-200",
-                    "hover:border-primary-700/45 hover:bg-primary-900/35 hover:shadow-[0_18px_50px_-30px_rgba(0,0,0,0.65)]",
+                    "grid items-center rounded-xl border-b border-primary-700/8",
+                    "transition-[background-color] duration-200",
+                    "hover:bg-primary-700/8",
                     rowClassName,
                   ]
                     .filter(Boolean)
@@ -561,7 +646,7 @@ export function DataGridTable<TData>({
                 {after ? (
                   <div
                     role="row"
-                    className="rounded-2xl border border-primary-700/25 bg-primary-900/15 p-2"
+                    className="rounded-xl bg-primary-900/15 px-2 pb-2"
                   >
                     {after}
                   </div>

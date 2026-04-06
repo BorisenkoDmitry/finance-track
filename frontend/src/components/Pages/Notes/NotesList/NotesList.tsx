@@ -17,6 +17,7 @@ import {
 } from "../../../../stores/NotesSlice/noteThunks";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
+import { EmptyState } from "../../../UI/EmptyState/EmptyState";
 
 export const NotesList = () => {
   const { noteList: list, isLoadingUpdateItem } = useAppSelector(
@@ -70,7 +71,7 @@ export const NotesList = () => {
     );
   }, [date, dispatch]);
 
-  if (list.length === 0) return <div>Список пуст...</div>;
+  if (list.length === 0) return <EmptyState title="Нет заметок" subtitle="Создайте первую заметку" />;
 
   return (
     <ul className="grid grid-cols-4 gap-8">

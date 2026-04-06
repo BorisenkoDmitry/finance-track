@@ -1,11 +1,11 @@
 import {
   createAsyncThunk,
   createSlice,
-  type PayloadAction,
 } from "@reduxjs/toolkit";
 
 import toast from "react-hot-toast";
 import api from "../Api/api";
+import { extractApiError, getErrorMessage, type ApiErrorPayload } from "../types/api";
 
 export type UserRole = "NoPaydUser" | "SuperAdmin" | "PaydUser" | "BetaUser";
 
@@ -57,7 +57,7 @@ export const userMe = createAsyncThunk<UserMeReq>(
       const d = await api.get<{ result: boolean }>("auth/me");
       return d.data as UserMeReq;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -78,7 +78,7 @@ export const changePassword = createAsyncThunk<UserMeReq, IChangePasswordDTO>(
       );
       return d.data as UserMeReq;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -92,7 +92,7 @@ export const uploadImage = createAsyncThunk<UserMeReq, { avatar: File }>(
       const d = await api.post<UserMeReq>("avatar/upload", formData);
       return d.data;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -104,7 +104,7 @@ export const deleteImage = createAsyncThunk<UserMeReq>(
       const d = await api.delete<UserMeReq>("avatar/delete");
       return d.data;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -116,7 +116,7 @@ export const usersGetApi = createAsyncThunk<UserReq[]>(
       const d = await api.get<UserReq[]>("auth");
       return d.data;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -128,7 +128,7 @@ export const userDeleteApi = createAsyncThunk<void, string>(
       await api.delete(`auth/${id}`);
       return undefined;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -144,7 +144,7 @@ export const changeUserRole = createAsyncThunk<
     });
     return res.data.result;
   } catch (err) {
-    rejectWithValue(err);
+    return rejectWithValue(extractApiError(err));
   }
 });
 
@@ -155,26 +155,22 @@ export const RoleGetApi = createAsyncThunk<{ id: string; name: UserRole }[]>(
       const d = await api.get<{ id: string; name: UserRole }[]>("roles");
       return d.data;
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
 
 export const logoutApi = createAsyncThunk(
   "userLogout",
-  async (_, { dispatch, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const d = await api.post("auth/logout");
-      return d.data;
-    } catch (err) {
-      localStorage.removeItem("token");
-      return rejectWithValue(err);
-    } finally {
-      localStorage.removeItem("token");
-      setTimeout(() => {
-        dispatch(userMe());
-      }, 500);
+      await api.post("auth/logout");
+    } catch {
+      // ignore — server may reject if token already expired
     }
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    return rejectWithValue("logout");
   }
 );
 
@@ -194,13 +190,16 @@ export const loginApi = createAsyncThunk<loginRes, loginDTO>(
   async (obj, { dispatch, rejectWithValue }) => {
     try {
       const res = await api.post("auth/login", obj);
-      localStorage.setItem(
-        "token",
-        JSON.stringify((res.data as loginRes).accessToken)
-      );
-      return res.data as loginRes;
+      const data = res.data as loginRes;
+      localStorage.setItem("token", JSON.stringify(data.accessToken));
+      if (data.refreshToken) {
+        localStorage.setItem("refreshToken", JSON.stringify(
+          typeof data.refreshToken === "object" ? data.refreshToken.token : data.refreshToken
+        ));
+      }
+      return data;
     } catch (err) {
-      rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     } finally {
       dispatch(userMe());
     }
@@ -232,7 +231,7 @@ export const createUserApi = createAsyncThunk<createUserRes, createUserDto>(
         return res.data;
       });
     } catch (err) {
-      return rejectWithValue(err);
+      return rejectWithValue(extractApiError(err));
     }
   }
 );
@@ -263,14 +262,9 @@ const userSlice = createSlice({
     });
     builder.addCase(
       createUserApi.rejected,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (state, action: PayloadAction<any>) => {
+      (state, action) => {
         state.isLoading = false;
-        if (Array.isArray(action.payload.response.data.message)) {
-          toast.error(`${action.payload.response.data.message.join(" ")}`);
-        } else {
-          toast.error(`${action.payload.response.data.message}`);
-        }
+        toast.error(getErrorMessage(action.payload as ApiErrorPayload));
       }
     );
 
@@ -292,8 +286,7 @@ const userSlice = createSlice({
     });
     builder.addCase(changePassword.rejected, (state, action) => {
       state.isLoading = false;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      toast.error((action.payload as any).response.data.message);
+      toast.error(getErrorMessage(action.payload as ApiErrorPayload));
     });
     builder.addCase(changePassword.fulfilled, (state, action) => {
       state.isLoading = false;
@@ -366,6 +359,11 @@ const userSlice = createSlice({
     builder.addCase(deleteImage.fulfilled, (state, action) => {
       state.isLoadingImage = false;
       state.user = action.payload;
+    });
+
+    builder.addCase(logoutApi.rejected, (state) => {
+      state.user = null;
+      state.isLoading = false;
     });
   },
 });

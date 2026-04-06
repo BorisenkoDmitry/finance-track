@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -11,6 +13,7 @@ import { ExpDetail } from './expDetail/expdetail.entity';
 import { Exclude } from 'class-transformer';
 import { User } from 'src/auth/auth.entity';
 import { CatalogEntity } from 'src/catalogs/catalogs.entity';
+import { TagEntity } from 'src/tags/tags.entity';
 
 @Entity()
 export class Exp {
@@ -52,4 +55,12 @@ export class Exp {
     nullable: true,
   })
   catalogId: string;
+
+  @ManyToMany(() => TagEntity, (tag) => tag.exps)
+  @JoinTable({
+    name: 'exp_tags',
+    joinColumn: { name: 'exp_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tag_id', referencedColumnName: 'id' },
+  })
+  tags: TagEntity[];
 }

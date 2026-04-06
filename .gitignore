@@ -16,3 +16,6 @@ frontend/dist/
 
 # logs
 *.log
+
+# claude code memory
+.claude/
