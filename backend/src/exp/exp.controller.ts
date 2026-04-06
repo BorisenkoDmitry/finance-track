@@ -13,10 +13,20 @@ import { ExpService } from './exp.service';
 import { GetExpDTO } from './dto/get-exp.dto';
 import { GetExpFilterDTO } from './dto/get-exp-filter.dto';
 import { CurrentUserID } from 'src/auth/user.docorator';
+import { ReceiptScanService } from './receipt-scan.service';
 
 @Controller('exp')
 export class ExpController {
-  constructor(private readonly ExpService: ExpService) {}
+  constructor(
+    private readonly ExpService: ExpService,
+    private readonly receiptScanService: ReceiptScanService,
+  ) {}
+
+  // Scan receipt MUST be before :id routes
+  @Post('scan-receipt')
+  scanReceipt(@Body() body: { image: string }) {
+    return this.receiptScanService.scanReceipt(body.image);
+  }
 
   @Get()
   getAllExp(

@@ -16,6 +16,8 @@ function parseCorsOrigins(v: string | undefined): string[] {
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useBodyParser('json', { limit: '50mb' });
+  app.useBodyParser('urlencoded', { limit: '50mb', extended: true });
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

@@ -1,4 +1,4 @@
-import { type FC } from "react";
+import { useRef, useState, type FC } from "react";
 import { createPortal } from "react-dom";
 import { Popup } from "../../../../Layouts/Popup/Popup";
 import { InputField } from "../../../../UI/Input/Input";
@@ -23,17 +23,23 @@ import { DateField } from "../../../../UI/DateField/DateField";
 import { SelectField } from "../../../../UI/SelectField/SelectField";
 import { TextAreaField } from "../../../../UI/TextArea/TextArea";
 import { ExpDetail } from "./ExpDetail/ExpDetail";
-import { TrendingDown } from "lucide-react";
+import { TrendingDown, Camera, Loader2 } from "lucide-react";
+import api from "../../../../../Api/api";
+import toast from "react-hot-toast";
 
 export const ExpForm: FC = () => {
   const {
     expInc: { currentExp, isOpenExpForm, isNewExp },
     catalogs: { categoryExpList: catList },
+    user: { user },
   } = useAppSelector((st) => st);
 
   const dispatch = useAppDispatch();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   const isEdit = !isNewExp && currentExp.id !== "-1";
+  const isSuperAdmin = user?.user?.roles?.some((r) => r.name === "SuperAdmin" || r.name === "BetaUser");
 
   const onClose = () => {
     dispatch(toggleExpForm(false));
@@ -46,7 +52,6 @@ export const ExpForm: FC = () => {
     if (isEdit) {
       dispatch(updateExpApi(currentExp));
     } else {
-      // Create expense first, then create all local products with the new expID
       const localProducts = currentExp.products.filter((p) => p.id.startsWith("local-"));
       const result = await (dispatch as AppDispatch)(createExpApi(currentExp));
       if (createExpApi.fulfilled.match(result) && localProducts.length > 0) {
@@ -66,6 +71,52 @@ export const ExpForm: FC = () => {
     onClose();
   };
 
+  const handleScanReceipt = async (file: File) => {
+    setIsScanning(true);
+    try {
+      // Convert to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data:image/...;base64, prefix
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await api.post("exp/scan-receipt", { image: base64 });
+      const data = res.data as { products: { name: string; price: number; count: string }[]; total: number };
+
+      if (!data.products || data.products.length === 0) {
+        toast.error("Не удалось распознать товары на чеке");
+        return;
+      }
+
+      // Fill products into form
+      const newProducts = data.products.map((p, i) => ({
+        id: `local-scan-${Date.now()}-${i}`,
+        name: p.name,
+        price: p.price,
+        count: p.count,
+        expID: "",
+        isEdit: false,
+      }));
+
+      dispatch(onChangeFieldsExp({ key: "products", value: [...currentExp.products, ...newProducts] }));
+      dispatch(onChangeFieldsExp({ key: "price", value: data.total || data.products.reduce((s, p) => s + p.price, 0) }));
+
+      toast.success(`Распознано ${data.products.length} товаров`);
+    } catch (err) {
+      toast.error("Ошибка при сканировании чека");
+      console.error(err);
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   if (!isOpenExpForm) return null;
 
   return createPortal(
@@ -77,6 +128,41 @@ export const ExpForm: FC = () => {
       icon={<TrendingDown size={20} />}
     >
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        {/* Scan receipt button — only for SuperAdmin/BetaUser */}
+        {isSuperAdmin && !isEdit && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleScanReceipt(file);
+              }}
+            />
+            <button
+              type="button"
+              disabled={isScanning}
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-secondary-500/30 bg-secondary-500/5 py-3 text-sm font-medium text-secondary-400 transition-all hover:border-secondary-500/50 hover:bg-secondary-500/10 disabled:opacity-50"
+            >
+              {isScanning ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Распознаём чек...
+                </>
+              ) : (
+                <>
+                  <Camera size={16} />
+                  Сканировать чек
+                </>
+              )}
+            </button>
+          </>
+        )}
+
         {/* Amount */}
         <InputField
           value={formatNumber(currentExp.price)}
